@@ -1,2 +1,4 @@
-# cheesesharp
-43rd repo; cheese# for shits and giggles
+# Cheese#
+Designed for shits and giggles.  
+This implementation type and the language syntax are to be decided.
+
