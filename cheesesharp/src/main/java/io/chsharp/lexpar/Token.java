@@ -4,7 +4,7 @@ public class Token {
 	
 	public static enum Type {
 		/* Keywords */
-		CHEESE, WAS, MAKE, END, OPERATION,
+		CHEESE, WAS, MAKE, END, OPERATION, IS,
 		
 		/* General-purpose */
 		IDENTIFIER, DECIMAL, STRING,
@@ -16,9 +16,13 @@ public class Token {
 	public final Type type;
 	public final String text;
 	
-	public Token(Type type, String text) {
+	public final int line, ch;
+	
+	public Token(Type type, String text, int line, int ch) {
 		this.type = type;
 		this.text = text;
+		this.line = line;
+		this.ch = ch;
 	}
 	
 	@Override
