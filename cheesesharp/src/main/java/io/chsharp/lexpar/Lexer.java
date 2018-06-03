@@ -2,57 +2,72 @@ package io.chsharp.lexpar;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 public final class Lexer {
 	
-	private LexersInputStream in;
+	LexersInputStream istream;
+	
+	List<Token> peekStack = new ArrayList<Token>();
 	
 	public Lexer(InputStream is) {
-		in = new LexersInputStream(is);
+		istream = new LexersInputStream(is);
 	}
 	
 	public Token nextToken() {
-		int c = in.peek(1);
+		return nextToken(false);
+	}
+	
+	private Token nextToken(boolean ignorePeekStack) {
+		if (!ignorePeekStack && peekStack.size() > 0) {
+			return peekStack.remove(0);
+		}
+		
+		int c = istream.peek(1);
 		
 		Token ret = null;
 		
 		if (c == -1) {
-			ret = new Token(Token.Type.EOF, "EOF");
+			ret = new Token(Token.Type.EOF, "EOF", istream.getCurLine(), istream.getCurChar());
 		} else if (c == '"') {
-			in.read(); // consume the quote.
-			ret = new Token(Token.Type.STRING, match(Predicates.not('"')));
-			in.read(); // again.
-		} else if (Predicates.digit(c)) {
+			istream.read(); // consume the quote.
+			ret = new Token(Token.Type.STRING, match(Predicates.not('"')), istream.getCurLine(), istream.getCurChar());
+			istream.read(); // again.
+		} else if (Predicates.digit(c) || (c == '.' && Predicates.digit(istream.peek(2)))) {
 			String intPart = match(Predicates.and(Predicates::digit, Predicates.not('.')));
-			in.read(); // consume the dot.
+			istream.read(); // consume the dot.
 			String fracPart = match(Predicates::digit);
 			
-			ret = new Token(Token.Type.DECIMAL, intPart + "." + fracPart);
+			ret = new Token(Token.Type.DECIMAL, intPart + "." + fracPart, istream.getCurLine(), istream.getCurChar());
 		} else if (Predicates.whitespace(c)) {
 			match(Predicates::whitespace);
-			ret = nextToken();
+			ret = nextToken(ignorePeekStack);
 		} else if (Predicates.identifierStart(c)) {
 			String ident = match(Predicates::identifier);
 			
 			switch (ident) {
 				case "cheese":
-					ret = new Token(Token.Type.CHEESE, "cheese");
+					ret = new Token(Token.Type.CHEESE, "cheese", istream.getCurLine(), istream.getCurChar());
 					break;
 				case "was":
-					ret = new Token(Token.Type.WAS, "was");
+					ret = new Token(Token.Type.WAS, "was", istream.getCurLine(), istream.getCurChar());
 					break;
 				case "make":
-					ret = new Token(Token.Type.MAKE, "make");
+					ret = new Token(Token.Type.MAKE, "make", istream.getCurLine(), istream.getCurChar());
 					break;
 				case "operation":
-					ret = new Token(Token.Type.OPERATION, "operation");
+					ret = new Token(Token.Type.OPERATION, "operation", istream.getCurLine(), istream.getCurChar());
 					break;
 				case "end":
-					ret = new Token(Token.Type.END, "end");
+					ret = new Token(Token.Type.END, "end", istream.getCurLine(), istream.getCurChar());
+					break;
+				case "is":
+					ret = new Token(Token.Type.IS, "is", istream.getCurLine(), istream.getCurChar());
 					break;
 				default:
-					ret = new Token(Token.Type.IDENTIFIER, ident);
+					ret = new Token(Token.Type.IDENTIFIER, ident, istream.getCurLine(), istream.getCurChar());
 					break;
 			}
 		}
@@ -62,17 +77,29 @@ public final class Lexer {
 		} else {
 			StringBuilder msg = new StringBuilder();
 			msg.append("Unexpected character '");
-			msg.appendCodePoint(c);
+			if (Character.isWhitespace(c)) {
+				msg.append("\\x");
+				msg.append(Integer.toHexString(c));
+			} else {
+				msg.appendCodePoint(c);
+			}
 			msg.append("'.");
-			throw new LexerException(in.getCurLine(), in.getCurChar(), msg.toString());
+			throw new LexerException(istream.getCurLine(), istream.getCurChar(), msg.toString());
 		}
+	}
+	
+	public Token peek(int depth) {
+		while (peekStack.size() < depth) {
+			peekStack.add(nextToken(true));
+		}
+		return peekStack.get(depth - 1);
 	}
 	
 	private String match(Predicate<Integer> pred) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		
-		while (pred.test(in.peek(1))) {
-			baos.write(in.read());
+		while (pred.test(istream.peek(1))) {
+			baos.write(istream.read());
 		}
 		
 		return baos.toString();
@@ -85,11 +112,11 @@ public final class Lexer {
 		public static Predicate<Integer> and(Predicate<Integer> a, Predicate<Integer> b) {
 			return (i) -> a.test(i) && b.test(i);
 		}
-
+		
 		public static final boolean digit(int c) {
 			return c >= '0' && c <= '9';
 		}
-
+		
 		public static Predicate<Integer> not(int c) {
 			return (i) -> i != c;
 		}
