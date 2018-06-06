@@ -28,6 +28,7 @@ public class VisitorSemanticAnalyzer extends Visitor<ChType> {
 	public ChType visit(NodeStmtAssignment stmtassign) {
 		ChType left = stmtassign.left.accept(this);
 		ChType right = stmtassign.right.accept(this);
+		
 		if (stmtassign.type != null) {
 			scope.set(stmtassign.left.toString(), right);
 			
@@ -40,13 +41,13 @@ public class VisitorSemanticAnalyzer extends Visitor<ChType> {
 				throw new SemanticAnalysisException(
 						"Definition reference " + stmtassign.left + " does not exist in scope.");
 			}
-
+			
 			if (left != right) {
 				throw new SemanticAnalysisException(
 						"Assignment reference type " + left + " does not match expression type " + right + ".");
 			}
 		}
-
+		
 		return right;
 	}
 	

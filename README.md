@@ -2,6 +2,12 @@
 Designed for big-boy programming.  
 [The language syntax is to be decided. Help would be appreciated.](https://github.com/cheesesharplang/cheesesharp/issues/1)
 
+## Planned Features
+
+ - [ ] Implement an x86 FASM visitor.
+ - [ ] Implement a visitor for another CPU (name unknown).
+ - [ ] [Implement the escape character.](https://github.com/cheesesharplang/cheesesharp/issues/2)
+
 ## Why yet another programming language?
 Because they all suck!
 Cheese# has elegance, power, and readability all in one package!
