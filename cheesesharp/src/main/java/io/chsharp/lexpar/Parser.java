@@ -3,6 +3,7 @@ package io.chsharp.lexpar;
 import io.chsharp.ast.NodeCompilationUnit;
 import io.chsharp.ast.NodeDecimal;
 import io.chsharp.ast.NodeExpression;
+import io.chsharp.ast.NodeExpressionBinaryOp;
 import io.chsharp.ast.NodeExpressionDecimal;
 import io.chsharp.ast.NodeIdentifier;
 import io.chsharp.ast.NodeReference;
@@ -27,6 +28,16 @@ public final class Parser {
 		return token;
 	}
 	
+	public boolean maybe(Token.Type type) {
+		Token tok = lexer.peek(1);
+		if (tok.type == type) {
+			lexer.nextToken();
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	public NodeCompilationUnit matchCUnit() {
 		NodeCompilationUnit ret = new NodeCompilationUnit();
 		while (lexer.peek(1).type != Token.Type.EOF) {
@@ -38,7 +49,7 @@ public final class Parser {
 	public NodeStmt matchStmt() {
 		NodeStmtAssignment ret = new NodeStmtAssignment();
 		
-		if(lexer.peek(3).type == Type.IS) {
+		if (lexer.peek(3).type == Type.IS) {
 			// This is a definition, not an assignment.
 			ret.type = matchTypename();
 			ret.left = matchReference();
@@ -50,7 +61,7 @@ public final class Parser {
 			expect(Token.Type.IS);
 			ret.right = matchExpression();
 		}
-
+		
 		return ret;
 	}
 	
@@ -59,10 +70,24 @@ public final class Parser {
 	}
 	
 	public NodeExpression matchExpression() {
+		NodeExpression expr = matchExprAtom();
+		
+		while (maybe(Token.Type.PLUS)) {
+			NodeExpression right = matchExprAtom();
+			
+			expr = new NodeExpressionBinaryOp(expr, right);
+		}
+		
+		return expr;
+	}
+	
+	public NodeExpression matchExprAtom() {
 		Token tok = lexer.nextToken();
 		switch (tok.type) {
 			case DECIMAL:
 				return new NodeExpressionDecimal(new NodeDecimal(Double.parseDouble(tok.text)));
+			case IDENTIFIER:
+				return new NodeReferenceIdentifier(new NodeIdentifier(tok.text));
 			default:
 				throw new RuntimeException("Failed to match tok token type when matching an expression.");
 		}

@@ -1,13 +1,17 @@
 package io.chsharp;
 
+import io.chsharp.utils.Utils;
+
 public class ChType {
 	
-	public static final ChType DECIMAL = new ChType("Gouda");
+	public static final ChType DECIMAL = new ChType("Gouda", 10);
 	
 	public String friendlyName;
+	public int size;
 	
-	public ChType(String friendlyName) {
+	public ChType(String friendlyName, int size) {
 		this.friendlyName = friendlyName;
+		this.size = size;
 	}
 	
 	@Override
@@ -15,14 +19,26 @@ public class ChType {
 		return friendlyName;
 	}
 	
-	// Basically like metaclasses in Python, super easy to implement.
-	public static class ChTypeType extends ChType {
-		
+	public static class ChMetaType extends ChType {
+
 		public final ChType of;
 		
-		public ChTypeType(ChType type) {
-			super(type.friendlyName);
-			this.of = type;
+		public ChMetaType(ChType of) {
+			super("Class(" + of.friendlyName + ")", 0);
+			this.of = of;
+		}
+		
+	}
+		
+	public static class ChFunc extends ChType {
+
+		public final ChType ret;
+		public final ChType[] args;
+		
+		public ChFunc(ChType ret, ChType... args) {
+			super(ret.friendlyName + "(" + Utils.join(", ", args) + ")", 0);
+			this.ret = ret;
+			this.args = args;
 		}
 		
 	}

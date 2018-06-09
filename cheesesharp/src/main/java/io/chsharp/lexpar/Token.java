@@ -9,6 +9,9 @@ public class Token {
 		/* General-purpose */
 		IDENTIFIER, DECIMAL, STRING,
 		
+		/* Ops */
+		PLUS,
+		
 		/* Specials */
 		EOF,
 	}

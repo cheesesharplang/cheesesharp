@@ -31,6 +31,9 @@ public final class Lexer {
 		
 		if (c == -1) {
 			ret = new Token(Token.Type.EOF, "EOF", istream.getCurLine(), istream.getCurChar());
+		} else if (c == '+') {
+			istream.read();
+			ret = new Token(Token.Type.PLUS, "+", istream.getCurLine(), istream.getCurChar());
 		} else if (c == '"') {
 			istream.read(); // consume the quote.
 			ret = new Token(Token.Type.STRING, match(Predicates.not('"')), istream.getCurLine(), istream.getCurChar());

@@ -1,7 +1,9 @@
 package io.chsharp.visitor;
 
+import io.chsharp.ast.Node;
 import io.chsharp.ast.NodeCompilationUnit;
 import io.chsharp.ast.NodeDecimal;
+import io.chsharp.ast.NodeExpressionBinaryOp;
 import io.chsharp.ast.NodeExpressionDecimal;
 import io.chsharp.ast.NodeIdentifier;
 import io.chsharp.ast.NodeReferenceIdentifier;
@@ -31,6 +33,14 @@ public abstract class Visitor<T> {
 
 	public T visit(NodeIdentifier ident) {
 		return null;
+	}
+
+	public T visit(NodeExpressionBinaryOp binop) {
+		return null;
+	}
+	
+	public T visit(Node node) {
+		return node.accept(this);
 	}
 	
 }

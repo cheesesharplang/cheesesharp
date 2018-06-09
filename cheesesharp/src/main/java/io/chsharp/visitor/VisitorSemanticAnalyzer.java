@@ -1,9 +1,14 @@
 package io.chsharp.visitor;
 
+import java.util.HashMap;
+
 import io.chsharp.ChType;
+import io.chsharp.ChType.ChMetaType;
 import io.chsharp.Scope;
+import io.chsharp.ast.Node;
 import io.chsharp.ast.NodeCompilationUnit;
 import io.chsharp.ast.NodeDecimal;
+import io.chsharp.ast.NodeExpressionBinaryOp;
 import io.chsharp.ast.NodeExpressionDecimal;
 import io.chsharp.ast.NodeIdentifier;
 import io.chsharp.ast.NodeReferenceIdentifier;
@@ -14,8 +19,10 @@ public class VisitorSemanticAnalyzer extends Visitor<ChType> {
 	
 	public Scope<ChType> scope = new Scope<>(null);
 	
+	public HashMap<Node, ChType> nodeTypes = new HashMap<Node, ChType>();
+	
 	public VisitorSemanticAnalyzer() {
-		scope.set("Gouda", ChType.DECIMAL);
+		scope.set("Gouda", new ChMetaType(ChType.DECIMAL));
 	}
 	
 	public ChType visit(NodeCompilationUnit cunit) {
@@ -29,10 +36,17 @@ public class VisitorSemanticAnalyzer extends Visitor<ChType> {
 		ChType left = stmtassign.left.accept(this);
 		ChType right = stmtassign.right.accept(this);
 		
+		// If there's a user-specified type, then it's a definition, an not assignment.
 		if (stmtassign.type != null) {
 			scope.set(stmtassign.left.toString(), right);
 			
-			if (stmtassign.type.accept(this) != right) {
+			ChType userType = stmtassign.type.accept(this);
+			
+			if(userType instanceof ChMetaType) {
+				userType = ((ChMetaType) userType).of;
+			}
+			
+			if (userType != right) {
 				throw new SemanticAnalysisException("Definition expression type " + right
 						+ " does not match user-specified type " + stmtassign.type + ".");
 			}
@@ -48,24 +62,36 @@ public class VisitorSemanticAnalyzer extends Visitor<ChType> {
 			}
 		}
 		
+		nodeTypes.put(stmtassign, right);
 		return right;
 	}
 	
+	public ChType visit(NodeExpressionBinaryOp binop) {
+		return ChType.DECIMAL;
+	}
+	
 	public ChType visit(NodeExpressionDecimal exprdecimal) {
-		return visit(exprdecimal.decimal);
+		ChType ret = visit(exprdecimal.decimal);
+		nodeTypes.putIfAbsent(exprdecimal, ret);
+		return ret;
 	}
 	
 	public ChType visit(NodeDecimal decimal) {
+		nodeTypes.putIfAbsent(decimal, ChType.DECIMAL);
 		return ChType.DECIMAL;
 	}
 	
 	@Override
 	public ChType visit(NodeIdentifier ident) {
-		return scope.get(ident.text);
+		ChType ret = scope.get(ident.text);
+		nodeTypes.putIfAbsent(ident, ret);
+		return ret;
 	}
 	
 	public ChType visit(NodeReferenceIdentifier identref) {
-		return visit(identref.ident);
+		ChType ret = visit(identref.ident);
+		nodeTypes.putIfAbsent(identref, ret);
+		return ret;
 	}
 	
 }
