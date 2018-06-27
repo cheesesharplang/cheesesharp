@@ -18,4 +18,4 @@ Unlike Java, C++, he'll say "Yes, Cheese# shall now be used in the Linux kernel"
 Every member in the C Standard Commitee shall move to Cheese#.
 Windows shall be more of an abomination, as it will now be comprised of both Cheese# and C.
 
-heese# is the C killer.
+Cheese# is the C killer.
